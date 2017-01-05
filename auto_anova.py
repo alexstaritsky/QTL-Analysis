@@ -6,55 +6,64 @@ Datum: 28-12-2016
 
 from scipy import stats
 
-# Lees het locusbestand
+class Gene:
+    
+    def __init__(self, locus, markers):
+        self.__p_value = 0
+        self.__f_value = 0
+        self.__locus = locus
+        self.__markers = markers
+        
+    def get_locus(self):
+        return self.__locus
+        
+    def get_markers(self):
+        return self.__markers
+        
+    def get_f_value(self):
+        return self.__p_value
+        
+    def get_p_value(self):
+        return self.__p_value
+        
+    def set_f_value(self, p_value):
+        self.__p_value = p_value
+        
+    def set_p_value(self, f_value):
+        self.__f_value = f_value
+
+# Lees het locusbestand met markerdata
 def read_file_locus(path):
     raise NotImplementedError
 
-# Lees het treatbestand
-def read_file_treat(path):
+# Lees het traitbestand met traitnames
+def read_file_trait(path):
     raise NotImplementedError
 
 # Maak de a en de b groep
-def create_groups(locus_data, treat_data):
+def create_groups(traits, markers):
     raise NotImplementedError
 
-# Doe een single factor ANOVA 
-def single_factor_anova(group_a, group_b):
-    f_value, p_value = stats.f_oneway(group_a, group_b)
-    return f_value, p_value
-
-# Sla het bestand op
+# Sla het eindbestand bestand op
 def save_file(path, data, sep="\t"):
     raise NotImplementedError
 
-# Haalt de test datasets voor de ANOVA op
-# In Excel: p-value = 0.135202136
-#           f-value = 2.254444988
-# Waarden komen overeen!, dus we kunnen dit gebruiken!
-def get_test_files(path_a="test_set_a.txt", path_b="test_set_b.txt"):
-    group_a = []
-    group_b = []
-    try:
-        with open(path_a, "r") as bestand_a:
-            for regel in bestand_a:
-                group_a.append(float(regel.replace("\n","").replace("\r","").replace("\t","").replace(" ","")))
-        with open(path_b, "r") as bestand_b:
-            for regel in bestand_b:
-                group_b.append(float(regel.replace("\n","").replace("\r","").replace("\t","").replace(" ","")))
-    except IOError:
-        print("Er was een probleem bij het lezen van het bestand")
-    except FileNotFoundError:
-        print("Bestand niet gevonden!")
-    except ValueError:
-        print("Het bestand heeft waarschijnlijk een foute indeling")
-    return group_a, group_b
-    
 # Main functie
 def main():
-    group_a, group_b = get_test_files()
-    print(sum(group_a), len(group_a))
-    print(sum(group_b), len(group_b))
-    f_value, p_value = single_factor_anova(group_a, group_b)
-    print("F-value = {0}\nP-value = {1}".format(f_value, p_value))
+    # Lees de bestanden; traits is een lijst met alle traitnames; genes is een lijst met gene objecten die een locus en markerdata bevat
+    traits = read_file_trait("CvixLer.qua") 
+    genes = read_file_locus("CvixLer.loc")
+    
+    # Voor elk gen (of locus)
+    for gene in genes:
+        # Maak de 2 groepen voor de ANOVA
+        a, b = create_groups(traits, gene.get_markers())
+        # Voer de ANOVA uit
+        f, p = stats.f_oneway(a, b)
+        # Voeg de f en p waarde van de ANOVA toe aan het gen
+        gene.set_f_value(f)
+        gene.set_p_value(p)
+    # Sla het bestand op (waarschijnlijk tab-delimited op deze manier voor elk gen "locus \t f-value \t p-value \n") en dan geen spaties tussen
+    save_file(genes)
     
 main()
