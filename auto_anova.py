@@ -6,6 +6,7 @@ Datum: 28-12-2016
 
 from scipy import stats
 
+# Gene class om data op te slaan
 class Gene:
     
     def __init__(self, locus, markers):
