@@ -26,7 +26,7 @@ class Gene:
         return self.__markers
         
     def get_f_value(self):
-        return self.__p_value
+        return self.__f_value
         
     def get_p_value(self):
         return self.__p_value
@@ -39,28 +39,40 @@ class Gene:
 
 # Lees het locusbestand met markerdata
 def read_file_locus(path):
-    genes = []
+    regel_nummer = 0
+    genes, markers = [], []
     with open(path, "r") as bestand:
         for regel in bestand:
-            # Doe iets
-            raise NotImplementedError
+            if regel_nummer > 6:
+                if ";" in regel:
+                    locus = regel.split(";")[0].replace(" ","")
+                else:
+                    regel_markers = regel.replace(" ", "").replace("\n","").replace("\r","")
+                    for marker in regel_markers:
+                        markers.append(marker)
+                if len(markers) == 162:
+                    genes.append(Gene(locus, markers))
+                    markers = []
+            regel_nummer += 1
     bestand.close()
     return genes
 
-# Lees het traitbestand met traitnames -> een lijst met strings die een kommagetal of "*" zijn
+# Lees het traitbestand met traitnames
 def read_file_trait(path):
+    regel_nummer = 0
     traits = []
     with open(path, "r") as bestand:
         for regel in bestand:
-            # Doe iets
-            raise NotImplementedError
+            if regel_nummer > 7 and "\t" in regel:
+                traits.append(regel.split("\t")[1].replace("\n","").replace("\r","").replace(" ",""))
+            regel_nummer += 1
     bestand.close()
     return traits
 
-# Maak de a en de b groeps
+# Maak de a en de b groepen
 def create_groups(traits, markers):
     a, b = [], []
-    for i in range(len(markers)):
+    for i in range(0, len(markers)):
         if markers[i] == "a" and traits[i] != "*":
             a.append(float(traits[i]))
         if markers[i] == "b" and traits[i] != "*":
@@ -69,16 +81,16 @@ def create_groups(traits, markers):
 
 # Sla het eindbestand bestand op
 def save_file(path, genes, sep="\t"):
+    genes.sort(key=lambda gene: gene.get_p_value())
     with open(path, "w") as bestand:
-        bestand.write("Locus{0}F-value{0}P-value").format(sep)
-        genes.sort(key=lambda gene: gene.get_p_value, reverse=False)
+        bestand.write("Locus{0}P-value{0}F-value".format(sep))
         for gene in genes:
-            bestand.write("\n{1}{0}{2}{0}{3}").format(sep, gene.get_locus(), gene.get_f_value(), gene.get_p_value())
+            bestand.write("\n{1}{0}{2}{0}{3}".format(sep, gene.get_locus(), gene.get_p_value(), gene.get_f_value()))
     bestand.close()
 
 # Main functie
 def main():
-    # Lees de bestanden; traits is een lijst met alle traitnames; genes is een lijst met gene objecten die een locus en markerdata bevat
+    # Lees de bestanden
     traits = read_file_trait("CvixLer.qua")
     genes = read_file_locus("CvixLer.loc") 
     # Voor elk gen (of locus)
@@ -90,7 +102,8 @@ def main():
         # Voeg de f en p waarde van de ANOVA toe aan het gen
         gene.set_f_value(f)
         gene.set_p_value(p)
-    # Sla het bestand op (waarschijnlijk tab-delimited op deze manier voor elk gen "locus \t f-value \t p-value \n") en dan geen spaties tussen
+    # Sla de genen in een bestand op
     save_file("results_auto_anova.txt", genes)
+    print("Done!")
     
 main()
