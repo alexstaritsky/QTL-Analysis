@@ -14,8 +14,8 @@ from scipy import stats
 class Gene:
     
     def __init__(self, locus, markers):
-        self.__p_value = float(0)
-        self.__f_value = float(0)
+        self.__p_value = float(-1)
+        self.__f_value = float(-1)
         self.__locus = locus
         self.__markers = markers
         
@@ -57,7 +57,7 @@ def read_file_trait(path):
     bestand.close()
     return traits
 
-# Maak de a en de b groep
+# Maak de a en de b groeps
 def create_groups(traits, markers):
     a, b = [], []
     for i in range(len(markers)):
@@ -68,11 +68,12 @@ def create_groups(traits, markers):
     return a, b
 
 # Sla het eindbestand bestand op
-def save_file(path, data, sep="\t"):
+def save_file(path, genes, sep="\t"):
     with open(path, "w") as bestand:
-        for regel in bestand:
-            # Doe iets
-            raise NotImplementedError
+        bestand.write("Locus{0}F-value{0}P-value").format(sep)
+        genes.sort(key=lambda gene: gene.get_p_value, reverse=False)
+        for gene in genes:
+            bestand.write("\n{1}{0}{2}{0}{3}").format(sep, gene.get_locus(), gene.get_f_value(), gene.get_p_value())
     bestand.close()
 
 # Main functie
