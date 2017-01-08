@@ -31,11 +31,11 @@ class Gene:
     def get_p_value(self):
         return self.__p_value
         
-    def set_f_value(self, p_value):
-        self.__p_value = p_value
-        
-    def set_p_value(self, f_value):
+    def set_f_value(self, f_value):
         self.__f_value = f_value
+        
+    def set_p_value(self, p_value):
+        self.__p_value = p_value
 
 # Lees het locusbestand met markerdata
 def read_file_locus(path):
